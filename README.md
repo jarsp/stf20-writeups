@@ -26,3 +26,11 @@ bp USER32!GetMessageW+0x54 ".if (poi(rbx+0x8)==0x102) {.printf \"%c\n\", poi(rbx
 ```
 
 and then repeatedly executing `g` and waiting for the breakpoint to hit eventually prints out the contents of the file character by character (including backspaces, which have to be accounted for), giving the flag `govtech-csg{Y0u_d0NT_n3eD_no_71m3$T0nE}`.
+
+
+## Reversing - Striking Back 1
+We are given a .NET binary that we can decompile. Some reversing indicates that it wants a 32-character string in the first argument to the executable, then it does a bunch of repeated hashing of the input before checking some bytes in the hashed result. This turns out to mostly be time-wasting and we can ignore this, as it does not use this result further.
+
+After that, it takes the input and runs it through `func1`, `func4` and `func2` in that order twice, then does a character-by-character check on the output with a string stored in the binary, and prints out our input as the flag. These functions are not particularly interesting and just scramble the input, the only one of note is `func4`, which is implemented as a native method, which we can reverse using IDA.
+
+All of the functions are easily invertible, and by executing their inverses in the reverse order on the string stored in the binary we can obtain the flag `govtech-csg{h0pp1ng_btwn_w0rlds}`. See the [solve script](striking-back-1-solve.py) for details.
