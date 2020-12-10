@@ -57,4 +57,12 @@ In the instruction decode routine, there is a little bit of anti-debug inserted,
 ![sb2-6.png](sb2-6.png)  
 This might have been some change in the github repo (because it looks pretty broken) since the time of challenge writing til now, it was only discovered when trying to figure out why the bytecode did not seem to be reading input correctly.
 
-After making all of these changes to the source of ebcvm and inserting some code to dump a trace of execution and dump a disassembly of the bytecode, we can extract the disassembly and get the bytecode to run properly.
+After making all of these changes to the source of ebcvm and inserting some code to dump a trace of execution and dump a disassembly of the bytecode, we can extract the disassembly and get the bytecode to run properly. From docs and looking at the code we can infer the correct calling convention for the EFI bytecode. (arguments in R4/R5 and return in R7, callee-saved in R0-R3).
+
+The annotated disassembly of the main function of the bytecode looks like this:  
+![sb2-7.png](sb2-7.png)
+It reads in a user string, calls `strlen` on it, runs a hash (which happens to be CRC32) which produces a dword, does some very lenient check (the win/lose labels are a little misleading) and then runs `process_hash` on it. The `process_hash` function looks like this:  
+![sb2-8.png](sb2-8.png)  
+where the repeating fragment repeats 11 times.
+
+As can be seen, it reads out an encrypted string from the binary and the hash output. For each iteration of the loop, it does a small computation on the hash, modifying it, then xors it with 4 bytes of the encrypted data. Since we know the prefix for the flag we can derive the hash value required and decrypt the flag. This part was not done during the CTF as I had wasted a lot of time reversing the VM without the source.
